@@ -40,20 +40,31 @@ interface Fixture {
 
 let fx: Fixture
 
+// Uses the admin API (pre-confirmed user), not public signUp: the probe suite
+// tests isolation, and must not depend on whatever the project's "confirm
+// email" auth setting happens to be — that's a GetStarted-flow product
+// concern, tested elsewhere, not this suite's job.
 async function signUpAndCreateTenant(email: string, tenantName: string) {
+  const { data: created, error: createErr } = await admin.auth.admin.createUser({
+    email,
+    password: PASSWORD,
+    email_confirm: true,
+  })
+  if (createErr || !created.user) throw new Error(`admin create failed for ${email}: ${createErr?.message}`)
+
   const client = anonClient()
-  const { data: signUpData, error: signUpError } = await client.auth.signUp({ email, password: PASSWORD })
-  if (signUpError || !signUpData.session) throw new Error(`signup failed for ${email}: ${signUpError?.message}`)
+  const { error: signInErr } = await client.auth.signInWithPassword({ email, password: PASSWORD })
+  if (signInErr) throw new Error(`sign-in failed for ${email}: ${signInErr.message}`)
 
   const { data: tenantId, error: rpcError } = await client.rpc('create_tenant', { p_name: tenantName })
   if (rpcError) throw new Error(`create_tenant failed for ${email}: ${rpcError.message}`)
 
-  return { client, userId: signUpData.session.user.id, tenantId: tenantId as string }
+  return { client, userId: created.user.id, tenantId: tenantId as string }
 }
 
 test.beforeAll(async () => {
-  const a = await signUpAndCreateTenant(`probe-owner-a-${runId}@example.com`, `Probe Tenant A ${runId}`)
-  const b = await signUpAndCreateTenant(`probe-owner-b-${runId}@example.com`, `Probe Tenant B ${runId}`)
+  const a = await signUpAndCreateTenant(`probe-owner-a-${runId}@gmail.com`, `Probe Tenant A ${runId}`)
+  const b = await signUpAndCreateTenant(`probe-owner-b-${runId}@gmail.com`, `Probe Tenant B ${runId}`)
 
   const { data: rolesA } = await a.client.from('roles').select('id, name').eq('tenant_id', a.tenantId)
   const { data: rolesB } = await b.client.from('roles').select('id, name').eq('tenant_id', b.tenantId)
@@ -64,7 +75,7 @@ test.beforeAll(async () => {
   // Create the Field-role user in tenant A directly via the service role —
   // the probe suite tests isolation, not the invite UX (that's covered by the
   // founder's real-phone check per Slice 1's done bar).
-  const fieldAEmail = `probe-field-a-${runId}@example.com`
+  const fieldAEmail = `probe-field-a-${runId}@gmail.com`
   const { data: fieldAUser, error: createErr } = await admin.auth.admin.createUser({
     email: fieldAEmail,
     password: PASSWORD,
@@ -81,7 +92,7 @@ test.beforeAll(async () => {
 
   const { data: invRows, error: invErr } = await a.client.rpc('create_invitation', {
     p_tenant_id: a.tenantId,
-    p_email: `probe-invitee-a-${runId}@example.com`,
+    p_email: `probe-invitee-a-${runId}@gmail.com`,
     p_role_id: fieldRoleAId,
   })
   if (invErr) throw new Error(`failed to seed invitation: ${invErr.message}`)
@@ -162,7 +173,7 @@ test('cross-tenant: users table hides people you share no tenant with', async ()
 test('cross-tenant: create_invitation rejects a foreign tenant_id', async () => {
   const { error } = await fx.fieldA.rpc('create_invitation', {
     p_tenant_id: fx.tenantBId,
-    p_email: `should-not-exist-${runId}@example.com`,
+    p_email: `should-not-exist-${runId}@gmail.com`,
     p_role_id: fx.fieldRoleBId,
   })
   expect(error).not.toBeNull()
@@ -183,7 +194,7 @@ test('cross-tenant: deactivate_membership rejects a foreign membership', async (
 test('privilege escalation: Field role cannot manage members in its own tenant', async () => {
   const { error } = await fx.fieldA.rpc('create_invitation', {
     p_tenant_id: fx.tenantAId,
-    p_email: `should-not-exist-own-${runId}@example.com`,
+    p_email: `should-not-exist-own-${runId}@gmail.com`,
     p_role_id: fx.fieldRoleAId,
   })
   expect(error).not.toBeNull()

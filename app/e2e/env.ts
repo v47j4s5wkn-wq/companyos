@@ -1,5 +1,8 @@
 import { config } from 'dotenv'
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // Local runs read app/.env.local; CI supplies these as real environment
 // variables (repo secrets) and dotenv silently no-ops when the file is absent.
