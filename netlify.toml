@@ -1,0 +1,21 @@
+# Netlify builds the PWA from source on every push to main (staging).
+# Paths here are relative to `base`, so publish is "dist", not "app/dist".
+
+[build]
+  base = "app"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA fallback: react-router owns the routes, so every path serves index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

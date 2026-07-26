@@ -13,6 +13,9 @@ dist/
 app/dist/
 app/dev-dist/
 
+# netlify (local link state only; netlify.toml IS committed)
+.netlify/
+
 # supabase
 .supabase/
 supabase/.branches/
