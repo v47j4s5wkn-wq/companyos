@@ -1,0 +1,101 @@
+/* TURN2-DESIGN.md — "British worksite instrument". Light theme is the default:
+   dark UIs fail in daylight and this is a field-first product. Dark exists as an
+   office preference only (prefers-color-scheme, never the identity). */
+
+:root {
+  --paper: #f7f6f2;
+  --sheet: #ffffff;
+  --ink: #1a1c1e;
+  --graphite: #565b61;
+  --brand: #2e4a3a; /* platform default; replaced by tenant colour post-Genesis */
+  --brand-on: #f7f6f2;
+  --hivis: #f5a800;
+  --signal: #c8321e;
+  --trace: #2456c9;
+  --pass: #2c7a3f;
+
+  --rule: rgb(86 91 97 / 20%); /* graphite @ 20%, form-rule lines */
+
+  --font-display: 'Archivo', sans-serif;
+  --font-body: 'Public Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 48px;
+  --space-6: 64px;
+
+  --radius: 6px;
+  --radius-primary: 10px;
+
+  --body-size: 15px;
+  --line-length-max: 68ch;
+
+  --touch-target: 44px;
+}
+
+/* Site Mode — one-tap field mode: 17px floor, 64px targets, AAA-leaning contrast. */
+:root[data-site-mode='true'] {
+  --body-size: 17px;
+  --touch-target: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #17181a;
+    --sheet: #1f2123;
+    --ink: #f2f1ee;
+    --graphite: #a3a9ad;
+    --rule: rgb(163 169 173 / 20%);
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #17181a;
+  --sheet: #1f2123;
+  --ink: #f2f1ee;
+  --graphite: #a3a9ad;
+  --rule: rgb(163 169 173 / 20%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--body-size);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--trace);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,129 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+}
+
+.sheet {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--graphite);
+  font-weight: 600;
+}
+
+.input {
+  min-height: var(--touch-target);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.input:focus-visible {
+  border-color: var(--trace);
+}
+
+.button {
+  min-height: var(--touch-target);
+  border-radius: var(--radius-primary);
+  border: none;
+  background: var(--brand);
+  color: var(--brand-on);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonGhost {
+  composes: button;
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid var(--rule);
+}
+
+.buttonLink {
+  composes: button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.buttonGhostLink {
+  composes: buttonGhost;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.buttonDanger {
+  composes: button;
+  background: var(--signal);
+}
+
+.error {
+  color: var(--signal);
+  font-size: 0.9rem;
+}
+
+.hint {
+  color: var(--graphite);
+  font-size: 0.85rem;
+}
+
+.rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.95rem;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyState {
+  text-align: center;
+  color: var(--graphite);
+  padding: var(--space-4);
+}

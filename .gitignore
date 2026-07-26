@@ -1,0 +1,32 @@
+# toolchain (local node, not committed — see .toolchain/env.sh)
+.toolchain/
+
+# env & secrets
+.env
+.env.local
+.env.*.local
+
+# node
+node_modules/
+app/node_modules/
+dist/
+app/dist/
+app/dev-dist/
+
+# supabase
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# editor / os
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+*.log
+.claude/settings.local.json
