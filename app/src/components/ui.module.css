@@ -63,7 +63,7 @@
 .buttonGhost {
   composes: button;
   background: transparent;
-  color: var(--brand);
+  color: var(--brand-text);
   border: 1px solid var(--rule);
 }
 

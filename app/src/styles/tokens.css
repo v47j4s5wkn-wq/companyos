@@ -1,6 +1,8 @@
 /* TURN2-DESIGN.md — "British worksite instrument". Light theme is the default:
    dark UIs fail in daylight and this is a field-first product. Dark exists as an
-   office preference only (prefers-color-scheme, never the identity). */
+   explicit office preference (data-theme="dark") and is deliberately NOT wired to
+   prefers-color-scheme — a fitter whose phone is on auto-dark would otherwise get
+   the dark theme in sunlight, which is exactly what D24 exists to prevent. */
 
 :root {
   --paper: #f7f6f2;
@@ -8,7 +10,8 @@
   --ink: #1a1c1e;
   --graphite: #565b61;
   --brand: #2e4a3a; /* platform default; replaced by tenant colour post-Genesis */
-  --brand-on: #f7f6f2;
+  --brand-on: #f7f6f2; /* text ON a brand-filled plate */
+  --brand-text: #2e4a3a; /* brand as text on paper/sheet — see dark override */
   --hivis: #f5a800;
   --signal: #c8321e;
   --trace: #2456c9;
@@ -42,22 +45,15 @@
   --touch-target: 64px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --paper: #17181a;
-    --sheet: #1f2123;
-    --ink: #f2f1ee;
-    --graphite: #a3a9ad;
-    --rule: rgb(163 169 173 / 20%);
-  }
-}
-
 :root[data-theme='dark'] {
   --paper: #17181a;
   --sheet: #1f2123;
   --ink: #f2f1ee;
   --graphite: #a3a9ad;
   --rule: rgb(163 169 173 / 20%);
+  /* the plate green is unreadable as text on a dark sheet; lift it for text use
+     only — plate fills keep the true brand colour */
+  --brand-text: #8fb69d;
 }
 
 * {
