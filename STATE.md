@@ -1,7 +1,18 @@
 # STATE.md — Company OS
-Updated: Turn 3, Slice 1 — infrastructure live, probe suite green in CI, staging hosting pending
+Updated: Turn 3, Slice 1 — deployed to staging (Netlify), full invite flow verified end-to-end in a real browser
 
-## Phase: Slice 1 — environments, CI, auth, front door, invitations.
+## Phase: Slice 1 — environments, CI, auth, front door, invitations. Remaining: founder's real-phone test.
+
+## Live staging app: https://companyosbuild.netlify.app
+Netlify site `companyosbuild` on the founder's NEW Netlify account (not the API-accessible one — the `companyos-staging` project on the old account is dead, ignore it). Linked to the GitHub repo; every push to `main` auto-builds. Build env vars (VITE_SUPABASE_URL/ANON_KEY) set by the founder in the Netlify UI.
+
+## Verified end-to-end in a browser against the deployed app (2026-07-27)
+- Get started → tenant "Brightroof Installations Ltd" created → landed role-scoped as Owner, labelplate carries tenant name.
+- Team screen: four role bundles present, invite created (Field, "Dan Mercer"), one-time link shown once, pending list + revoke render.
+- Wrong-person guard: owner opening Dan's invite link → "sent to a different email address". Correct.
+- New-user acceptance (Edge Function → sign-in → RPC): Dan and Amy both created, landed with correct roles. THREE REAL DEFECTS found and fixed doing this — see DECISIONS D37 and the "defects fixed" list below.
+- Office role (Amy) sees no "Manage team"; Field membership (Dan) confirmed via API.
+- Probe suite re-run after the RPC change: 11/11 green.
 
 ## Decided & delivered
 - Turn 1: TURN1-SPEC.md + TURN1-REDTEAM.md (9 defects corrected; D1–D23)
@@ -24,9 +35,15 @@ Updated: Turn 3, Slice 1 — infrastructure live, probe suite green in CI, stagi
 - **Prod Supabase**: `https://ismxghrrnpfunaazllcp.supabase.co` — **empty, no migrations applied.** Deliberate: prod deploys only from tagged releases per CLAUDE.md.
 - **Staging hosting**: Netlify project `companyos-staging` created (team `zackashton999`), `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` build env vars set, `netlify.toml` committed. **Not yet deployed** — see blocked list.
 
+## Defects fixed this session (all found by driving the deployed app, not by reading code)
+1. Edge Function had no CORS preflight handling — browser never sent the POST. OPTIONS now returns CORS headers.
+2. Acceptance logic had two owners (Edge Function duplicated the RPC's membership creation, so the client's follow-up RPC failed on the used invite). RPC is now sole owner + idempotent for same-person re-accept. (D37)
+3. Auth context treated all RLS-visible membership rows as "mine" — Amy rendered with the owner's role chip. Now filters by user_id.
+4. Dark theme was wired to prefers-color-scheme — auto-dark phones would get dark in sunlight, the exact failure D24 exists to prevent. Dark now requires explicit data-theme.
+
 ## Blocked on the founder
-1. **Link Netlify to the GitHub repo** (one-time, browser only — no terminal): app.netlify.com → project `companyos-staging` → Deploys → Build settings → Link repository → GitHub → `v47j4s5wkn-wq/companyos`. It reads `netlify.toml` automatically. After this, every push to `main` auto-deploys and no machine-local upload is ever needed. (Netlify's MCP upload-and-build path failed repeatedly — 400 on large payloads, then persistent 404 even at 1.9MB — so git-based deploys are both the fix and the correct end state.)
-2. Once deployed: the real-phone test — two tenants, invite a staff member to each, accept on a physical phone, confirm role-scoped landing and PWA install. That is Slice 1's actual done bar and it is **not yet met**.
+1. **The real-phone test — Slice 1's done bar, not yet met**: on a phone, open https://companyosbuild.netlify.app → Get started → create a second tenant → install as PWA → from a desktop, invite yourself (second email) → open the link on the phone → set password → confirm role-scoped landing. Two tenants each with one accepted staff member = Slice 1 done.
+2. **Name the product** (D38) — Company OS stays the dev name; shortlist offered: Daybook, Gaffer, Setsquare. Verify domains + UK IPO before committing. Rename is deliberately cheap (four touchpoints).
 
 ## Known gaps, disclosed not hidden
 - **Invites are not emailed.** The owner copies a link from the Team screen and sends it themselves. No email provider exists yet (D3/D4 put transactional email behind a provider + domain that don't exist at this point in the build). The schema and RPCs don't change when delivery is automated — only "resend" gains a real send. (D30)
@@ -36,8 +53,8 @@ Updated: Turn 3, Slice 1 — infrastructure live, probe suite green in CI, stagi
 - **react-router-dom 7.18.1** has an open advisory (RSC-mode CSRF bypass) with no patched 7.x release. Not exploitable here — client-only SPA, no RSC/server actions. Revisit when a patch ships.
 
 ## Next three steps
-1. Founder links Netlify → GitHub; I verify the deployed staging PWA.
-2. Real-phone invite test on two tenants → Slice 1 done.
+1. Founder: real-phone test (steps above) → Slice 1 done.
+2. Founder: pick the product name (no build dependency; can run in parallel).
 3. Slice 2: `operation_log` + `event_outbox` + Outbox Relay + realtime channels + Dexie offline queue + the convergence test. Highest-risk slice in the project; gets the most tests. The founder's milestone is that convergence test green on two physical phones.
 
 ## Verify-this list (unresolved)
