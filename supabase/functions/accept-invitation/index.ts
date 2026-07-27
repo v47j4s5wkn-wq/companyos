@@ -12,14 +12,25 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+// The browser preflights this call (it carries authorization + content-type), so
+// OPTIONS must be answered with CORS headers or the POST is never sent. Origin is
+// open because the security boundary here is the invitation token, not the caller's
+// origin — no cookies or ambient credentials are involved.
+const CORS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
+  'access-control-allow-methods': 'POST, OPTIONS',
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { ...CORS, 'content-type': 'application/json' },
   })
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
 
   let body: { token?: string; password?: string; name?: string }
@@ -87,28 +98,12 @@ Deno.serve(async (req) => {
     return json({ error: createError?.message ?? 'account creation failed' }, 400)
   }
 
-  // The new user isn't authenticated yet in this request — accept_invitation()
-  // checks auth.uid()/auth.jwt(), so finish the membership creation here instead,
-  // as the service role, mirroring exactly what that RPC does.
-  const { error: memberError } = await admin.from('memberships').upsert(
-    {
-      tenant_id: invitation.tenant_id,
-      user_id: created.user.id,
-      role_id: (
-        await admin.from('invitations').select('role_id').eq('id', invitation.id).single()
-      ).data?.role_id,
-    },
-    { onConflict: 'tenant_id,user_id' },
-  )
-  if (memberError) return json({ error: 'membership creation failed' }, 500)
-
-  await admin.from('invitations').update({ accepted_at: new Date().toISOString() }).eq('id', invitation.id)
-  await admin.from('auth_events').insert({
-    tenant_id: invitation.tenant_id,
-    user_id: created.user.id,
-    kind: 'invitation.accepted',
-    detail: { invitation_id: invitation.id },
-  })
-
+  // Deliberately NOT creating the membership or marking the invite accepted here:
+  // accept_invitation() is the single owner of acceptance. The client signs in
+  // with the password it just set and calls the RPC as the authenticated user,
+  // whose verified email matches the invitation. If that step never happens
+  // (user closes the tab), the account exists with no membership and the invite
+  // stays open — re-opening the link routes through the existing_account branch
+  // and completes the same way.
   return json({ status: 'created', email: invitation.email })
 })

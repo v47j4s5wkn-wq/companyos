@@ -64,9 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMemberships([])
       return
     }
+    // The memberships policy intentionally exposes colleagues' rows (the Team
+    // page lists them) — so "my memberships" MUST filter by user_id, or the
+    // first colleague returned gets mistaken for the signed-in user's role.
     const { data, error } = await supabase
       .from('memberships')
       .select('id, tenant_id, role_id, status, landing_view, tenants(name, slug), roles(name, permissions, field_gates, landing_view, is_owner)')
+      .eq('user_id', userData.user.id)
       .eq('status', 'active')
       .returns<MembershipRow[]>()
 
